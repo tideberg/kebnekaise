@@ -48,13 +48,17 @@ av loggern ska inte användas för att skriva till schema 2.
 
 ## Pi-drift och export
 
-Installera de båda drop-in-filerna under `deploy/systemd/pilot/` i respektive
+Installera de tre drop-in-filerna under `deploy/systemd/pilot/` i respektive
 `/etc/systemd/system/*.service.d/override.conf`. Lägg den granskade konfigurationen
 i `/etc/kebnekaise/pilot.json` (root:kebnekaise, 0640). De väljer en ny
 `/var/lib/kebnekaise/pilot.sqlite3` och dagsbackup i `backups-pilot/pilot-DATUM.sqlite3`.
 Demo-konfiguration, databas och tidigare backuper behålls separat. Loggern
 återförsöker själv när Matter-tjänsten återkommer; de två tjänsterna kan startas
 om oberoende av varandra.
+
+Den ordinarie loggern kör bara `collect`. Pilotens dashboard startas separat
+med `kebnekaise-dashboard.service`, använder pilotdatabasen och stoppas efter
+högst två timmar.
 
 Kör på Pi:n från `/opt/kebnekaise`, med skrivbehörighet för målfilen:
 

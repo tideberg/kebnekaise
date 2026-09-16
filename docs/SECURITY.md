@@ -44,7 +44,14 @@ under `deploy/matter/package-lock.json`. Inga installationsinstruktioner använd
 curl-pipe-shell. Just är en valfri genväg; alla kommandon finns även som Python.
 
 Referenskonfigurationen använder `matter-server@1.4.0` och Node.js 24 med låst
-npm-beroendeträd och installationsskript avstängda. Vald Thread-borderrouter och
+npm-beroendeträd. `.npmrc` kräver den exakta runtime-versionen, låsta paket,
+registry audit och avstängda installationsskript. Veckovis CI kör tester och
+`npm audit`; Dependabot föreslår npm- och Actions-uppdateringar för granskning.
+GitHub Actions är pinnade till commit-SHA och har endast läsbehörighet.
+En separat veckokontroll läser Node-projektets officiella versionsindex och
+misslyckas om den pinnade Node 24-versionen inte längre är senaste patchnivå.
+Automatiken upptäcker risk, men installation på Pi:n sker först efter backup,
+granskning och verifiering. Vald Thread-borderrouter och
 Matter-kontroller är miljöbeslut. Loggeradaptern skickar endast `read_attribute`
 till kontrollern på loopback. Styr-API:t behöver ändå betraktas som privilegierat
 för andra lokala processer. Controlleridentiteten ska lagras under en separat
@@ -61,6 +68,23 @@ HA:s token kan ha bredare rättigheter än de två sensorer som adaptern läser.
 Använd separat HA-användare med minsta tillgängliga rättigheter för extern
 adapter. HA OS-appen begär HA API-åtkomst, inte Supervisor-adminfunktioner.
 Supervisor-token lagras inte i konfigurationshistorik eller export.
+
+## Minimerad Pi-profil
+
+I produktionsprofilen startar endast insamlaren, Matter-kontrollern och
+backuptimern automatiskt. Dashboarden är en separat, icke aktiverbar systemd-
+tjänst som binds till loopback och stoppas efter högst två timmar. Matter-API:t
+är också loopback-bundet. systemd begränsar capabilities, skrivbara sökvägar,
+namespaces och adressfamiljer; pilotinsamlaren får bara ansluta till loopback
+och tömmer ärvda HA-tokenvariabler.
+
+SSH-drop-in-filen kräver publik nyckel, nekar root och lösenord och begränsar
+inloggning till en administratörsgrupp. Lokal port-forwarding behålls avsiktligt
+endast till dashboarden och Matter-API:t; fjärr-forwarding, agent forwarding
+och godtyckliga tunnlar nekas. Nätets brandvägg bör dessutom endast tillåta SSH från
+administrationsnätet och ingen router-port-forwarding. Matter/Thread behöver
+fortfarande lokal IPv6, mDNS och radiotrafik, så en generell blockering av all
+LAN-trafik skulle bryta funktionen.
 
 ## Förslag: börja utan koppling till centrala system
 

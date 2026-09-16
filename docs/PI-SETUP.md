@@ -43,7 +43,8 @@ Referenslayout:
 
 | Del | Drift |
 |---|---|
-| Logger och dashboard | `kebnekaise.service`, egen användare `kebnekaise` |
+| Logger | `kebnekaise.service`, egen användare `kebnekaise`; ingen webbserver |
+| Dashboard | `kebnekaise-dashboard.service`, manuell start, loopback och högst två timmar |
 | Konfiguration och data | `/etc/kebnekaise/pilot.json`, `/var/lib/kebnekaise/pilot.sqlite3` |
 | Daglig SQLite-backup | `kebnekaise-backup.timer`, lokal tid med en separat backupkatalog |
 | Backupretention | Markerade dagskopior behålls enligt lokal driftpolicy |
@@ -53,13 +54,21 @@ Referenslayout:
 | Matter-tillstånd | `/var/lib/kebnekaise-matter`, rättighet `0700`; aldrig i Git |
 
 Kör hela testsviten på målmaskinen före aktivering. Verifiera därefter att
-logger, Matter-kontroller och backuptimer startar efter omstart, att databasen
+logger, Matter-kontroller och backuptimer startar efter omstart, att dashboarden
+inte startar, att databasen
 har rätt läge och att en återställd kopia klarar integritetskontrollen. Spara
 testresultat, loggar och kopior i lokal eller godkänd extern lagring.
 
 ### Öppna från Macen
 
-När en lokal tunnel behövs:
+Starta dashboarden på Pi:n först när den behövs:
+
+```sh
+sudo systemctl start kebnekaise-dashboard.service
+```
+
+Öppna därefter en lokal tunnel. Matter-porten tas bara med när kontrollerns
+lokala administrationsgränssnitt verkligen behövs:
 
 ```sh
 ssh -N -o ExitOnForwardFailure=yes \
@@ -70,13 +79,15 @@ ssh -N -o ExitOnForwardFailure=yes \
 - [Kebnekaise dashboard](http://127.0.0.1:8840)
 - [Matter-kontroller och parning](http://127.0.0.1:5580)
 
-Båda webbportarna lyssnar enbart på loopback. Pi:n fortsätter samla data när
-webbläsaren stängs eller klienten sover. Tunneln kan behöva öppnas igen när
-klienten vaknar. Stäng en tunnel med dess lokala kontrollsocket:
+Båda portarna lyssnar enbart på loopback. Dashboarden stängs automatiskt efter
+två timmar och bör stoppas direkt efter användning; insamlingen fortsätter
+oberoende. Tunneln kan behöva öppnas igen när klienten vaknar. Stäng en tunnel
+med dess lokala kontrollsocket och stoppa dashboarden:
 
 ```sh
 ssh -S /path/to/dashboard-ssh.sock \
   -O exit <pi-user>@<pi-host>.local
+sudo systemctl stop kebnekaise-dashboard.service
 ```
 
 ### Första riktiga sensorn
@@ -106,9 +117,10 @@ efter ändrad parning.
 
 Matter-kontrollern är förberedd som prototyp enligt [förstudien](MATTER-LITE.md).
 OTA och Thread-diagnostik är avstängda. Paketversioner och integritetsvärden
-finns i `deploy/matter/package-lock.json`; paketens installationsskript kördes
-inte. Node-avbildningens SHA-256 kontrollerades mot Node.js officiella
-`SHASUMS256.txt` före installation.
+finns i `deploy/matter/package-lock.json`; paketens installationsskript
+blockeras av den versionshanterade `.npmrc`-filen. Node 24.21.0 används som
+exakt runtime-version och avbildningens SHA-256 ska kontrolleras mot Node.js
+officiella `SHASUMS256.txt` före installation.
 
 ### Löpande insamling, version 0.2.0
 

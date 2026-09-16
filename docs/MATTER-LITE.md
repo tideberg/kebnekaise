@@ -157,6 +157,8 @@ För den fristående servern behöver vi konkret:
    ensam gör inte att parade sensorer kan återanslutas efter kortbyte.
 
 Servern behöver Node.js >=22.13 enligt paketmetadata; Node 24 användes här.
+Det historiska provet ovan körde 24.19.0. Driftprofilen är nu låst till 24.21.0
+och kräver en vanlig gransknings- och test-PR för varje runtimebyte.
 Om vi använder upstreams Python-klient behöver just adaptern Python >=3.12
 och dess beroenden. Vår befintliga logger behåller sitt nuvarande krav tills
 en sådan adapter faktiskt införs.

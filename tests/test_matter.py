@@ -93,6 +93,7 @@ class MatterTests(unittest.TestCase):
             self.assertEqual(len(request["reads"][0]["attributes"]), 6)
             self.assertEqual(kwargs["timeout"], 20)
             self.assertTrue(kwargs["check"])
+            self.assertEqual(kwargs["env"], {})
 
     def test_missing_node_runtime_is_a_gap(self):
         self.config["matter"]["node_path"] = "/does-not-exist/node"

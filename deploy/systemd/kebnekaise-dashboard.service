@@ -1,12 +1,14 @@
 [Unit]
-Description=Kebnekaise consistent daily SQLite snapshot
+Description=Kebnekaise on-demand loopback dashboard
+After=kebnekaise.service
 
 [Service]
-Type=oneshot
+Type=simple
 User=kebnekaise
 Group=kebnekaise
 WorkingDirectory=/opt/kebnekaise
-ExecStart=/usr/bin/python3 scripts/daily_backup.py /var/lib/kebnekaise/office.sqlite3 /var/lib/kebnekaise/backups
+ExecStart=/usr/bin/python3 -m kebnekaise --config /etc/kebnekaise/office.json --db /var/lib/kebnekaise/office.sqlite3 serve
+RuntimeMaxSec=2h
 UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true
@@ -25,6 +27,8 @@ RestrictNamespaces=true
 LockPersonality=true
 CapabilityBoundingSet=
 SystemCallArchitectures=native
-RestrictAddressFamilies=AF_UNIX
+RestrictAddressFamilies=AF_UNIX AF_INET
 IPAddressDeny=any
-ReadWritePaths=/var/lib/kebnekaise
+IPAddressAllow=localhost
+
+# Deliberately not installable: this service must never be enabled at boot.

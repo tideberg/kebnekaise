@@ -17,7 +17,7 @@ på din dator. Se HA-appsteget längre ned.
 [HA:s Pi-installation](https://www.home-assistant.io/installation/raspberrypi/)
 
 **Äldre Pi eller önskemål om vanlig Linux:** Raspberry Pi OS Lite med Python
-3.11+ räcker för vår logger och en levande dashboard via SSH-tunnel. Använd
+3.11+ räcker för vår logger och en dashboard som startas vid behov via SSH-tunnel. Använd
 64-bitars OS om modellen stöder det. En äldre modell kan användas som logger
 även om HA/Matter behöver en annan, stödd värd. Vi installerar inte en gammal,
 osupportad HA-version för att passa gammal hårdvara.
@@ -69,6 +69,7 @@ sudo install -d -o root -g kebnekaise -m 750 /etc/kebnekaise
 git archive HEAD | sudo tar -x -C /opt/kebnekaise
 sudo install -o root -g kebnekaise -m 640 config/local-office.json /etc/kebnekaise/office.json
 sudo install -m 644 deploy/systemd/kebnekaise.service /etc/systemd/system/
+sudo install -m 644 deploy/systemd/kebnekaise-dashboard.service /etc/systemd/system/
 sudo install -m 644 deploy/systemd/kebnekaise-backup.service /etc/systemd/system/
 sudo install -m 644 deploy/systemd/kebnekaise-backup.timer /etc/systemd/system/
 sudo systemctl daemon-reload
@@ -98,10 +99,46 @@ journalctl -u kebnekaise.service --since today
 sudo systemctl restart kebnekaise.service
 ```
 
-Tjänsten kör som egen användare, återstartar vid fel, har skrivskyddad kod och
-skyddad datakatalog. Inga brandväggsregler, port-forwarding eller nätbryggor
+Den automatiska tjänsten kör endast `collect`; ingen webbserver startar vid
+boot. Vid behov startas dashboarden manuellt och stängs automatiskt efter två
+timmar:
+
+```sh
+sudo systemctl start kebnekaise-dashboard.service
+# På administratörens dator:
+ssh -N -o ExitOnForwardFailure=yes \
+  -L 127.0.0.1:8840:127.0.0.1:8840 ANVANDARE@PI_ADRESS
+sudo systemctl stop kebnekaise-dashboard.service  # när arbetet är klart
+```
+
+Dashboarden och Matter-API:t har systemd-policy som endast tillåter loopback.
+Tjänsterna kör som separata användare, med skrivskyddad kod, tom
+capability-lista och skyddade datakataloger. Matter-adaptern startar dessutom
+Node-hjälpprocessen med tom miljö så att HA-token inte följer med. Inga
+brandväggsregler, port-forwarding eller nätbryggor
 ändras av repot. `systemd-analyze verify` och omstartstest görs på den riktiga
 Pi:n; macOS kan inte verifiera systemd-driften.
+
+## SSH-härdning
+
+`deploy/ssh/99-kebnekaise.conf` är en försiktig drop-in för nyckelbaserad
+administration. Den stänger lösenord, root-inloggning, agent forwarding,
+fjärr-forwarding och tunnlar men behåller lokal port-forwarding enbart till
+dashboarden och Matter-API:t på loopback. Installera den inte förrän minst ett
+verifierat administratörskonto är medlem i gruppen `kebnekaise-admin`.
+
+```sh
+sudo groupadd --system kebnekaise-admin
+sudo usermod -aG kebnekaise-admin ANVANDARE
+sudo install -o root -g root -m 644 deploy/ssh/99-kebnekaise.conf /etc/ssh/sshd_config.d/
+sudo sshd -t
+sudo systemctl reload ssh
+```
+
+Behåll den befintliga SSH-sessionen öppen och verifiera nyckelinloggning i en
+andra session före utloggning. En central IdP är inte automatiskt en del av
+detta: om organisationen har en SSH-CA kan `TrustedUserCAKeys` och kortlivade
+SSH-certifikat införas som ett separat, miljöspecifikt beslut.
 
 ## HA OS: portlös logger-app
 
@@ -174,7 +211,21 @@ före kontorsdrift och efter förändrad backupmetod.
 ## Löpande kontroll
 
 - Veckovis: dataluckor, sensorer med gamla värden, diskrum och extern backup.
+- Veckovis: granska Dependabot- och CI-resultat för npm-trädet och GitHub Actions.
+- Veckovis CI jämför även den pinnade Node-versionen med Node-projektets
+  officiella versionsindex och larmar genom ett misslyckat jobb om den halkat efter.
+- Månadsvis: installera granskade OS-/Node-/Matter-uppdateringar i ett planerat
+  servicefönster. Kritiska, exploaterbara sårbarheter triageras omedelbart.
 - Vid firmware-/OS-byte: backup före, dokumenterad version efter, återanslutningstest.
 - Vid flytt/kalibrering: anteckna åtgärd, device-id och ny placeringsidentitet vid behov.
 - Kvartalsvis eller vid misstänkt drift: samplacering/referensjämförelse och granskad uppdatering.
 - Vid avbrott: loggern återhämtar sig vid nästa poll. Saknad radiohistorik fylls inte i efterhand.
+
+Före varje uppdatering: ta SQLite- och controllerbackup, spara aktuella
+versionsnummer, granska release notes/CVE:er och kör testerna. Installera med
+låst `package-lock.json`; `deploy/matter/.npmrc` kräver exakt Node-version och
+förbjuder npm-installationsskript. Efteråt: kör `npm audit --omit=dev`, projektets
+testsviter, `systemd-analyze verify`, omstartstest och en verklig sensorläsning.
+Rulla tillbaka till föregående granskade artefakt och backup om verifieringen
+misslyckas. Automatiseringen upptäcker uppdateringar; den installerar dem inte
+obevakat på Pi:n.

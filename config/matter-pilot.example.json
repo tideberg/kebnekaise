@@ -9,7 +9,7 @@
   "thresholds": {"co2": 1000, "temperature_low": 20, "temperature_high": 24},
   "matter": {
     "url": "ws://127.0.0.1:5580/ws",
-    "node_path": "/opt/node-v24.19.0-linux-arm64/bin/node",
+    "node_path": "/opt/node-v24.21.0-linux-arm64/bin/node",
     "timeout_seconds": 15
   },
   "rooms": [{"id": "pilot-room"}],

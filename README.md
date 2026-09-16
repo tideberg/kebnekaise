@@ -13,8 +13,10 @@ JavaScript behövs. `just` är en valfri kommandogenväg. Det här är ett Git-r
 lokala databaser, exporter, backuper, credentials och miljöspecifika
 installationsfiler ska ligga utanför versionshanteringen.
 
-Matter-stöd för en Pi-pilot finns i repot, med automatisk start och daglig
-backup. Sensorvärden och Matter-kontrollerns identitet är miljöspecifika och
+Matter-stöd för en Pi-pilot finns i repot, med automatisk start av enbart
+insamling och daglig backup. Dashboarden startas tidsbegränsat vid behov och
+nås endast genom en lokal SSH-tunnel. Sensorvärden och Matter-kontrollerns
+identitet är miljöspecifika och
 ska hållas utanför repot. Se [Pi: installation och SSH](docs/PI-SETUP.md) för
 den generella anslutnings- och driftguiden.
 
@@ -125,10 +127,12 @@ Router behövs också. Apple TV kan sköta Thread utan en egen tvOS-app.
 mini-PC är det enklaste *officiellt stödda* Matter-spåret. För samma dator med
 HA OS finns en förberedd, portlös logger-app under `deploy/ha-app`; den ger
 dagliga SQLite-kopior som kan öppnas i dashboarden på din dator. Linux med
-systemd ger även en levande dashboard via SSH-tunnel. Den faktiska hårdvaran,
+systemd ger även en tidsbegränsad dashboard via SSH-tunnel vid behov. Den
+faktiska hårdvaran,
 värdnamnet och provdriften dokumenteras lokalt per installation. HA-appens
 container är ännu inte verifierad.
 
-Dashboarden binder enbart **127.0.0.1**. Den saknar publiceringsläge. Matter- och
+Dashboarden och Matter-serverns administrations-API binder enbart
+**127.0.0.1**. De saknar publiceringsläge. Matter- och
 nätverksverifiering görs i målmiljön; nätverksnamn, adresser och mätdata ska inte
 skrivas in i detta repo.
