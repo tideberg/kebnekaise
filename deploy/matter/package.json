@@ -1,0 +1,8 @@
+{
+  "name": "kebnekaise-matter-runtime",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "matter-server": "1.4.0"
+  }
+}

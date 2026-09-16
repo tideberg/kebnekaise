@@ -1,0 +1,32 @@
+[Unit]
+Description=Kebnekaise Matter controller on the local network
+After=network-online.target time-sync.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kebnekaise-matter
+Group=kebnekaise-matter
+WorkingDirectory=/opt/kebnekaise-matter
+ExecStart=/opt/node-v24.19.0-linux-arm64/bin/node node_modules/matter-server/dist/esm/MatterServer.js --storage-path /var/lib/kebnekaise-matter --listen-address 127.0.0.1 --port 5580 --primary-interface eth0 --default-fabric-label Kebnekaise --disable-ota --disable-thread-diagnostics --log-level warning
+Restart=on-failure
+RestartSec=15
+StateDirectory=kebnekaise-matter
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "mode": "pilot",
+  "site_name": "Matter pilot example",
+  "timezone": "Europe/Stockholm",
+  "interval_seconds": 60,
+  "max_hold_seconds": 120,
+  "work_hours": [8, 17],
+  "thresholds": {"co2": 1000, "temperature_low": 20, "temperature_high": 24},
+  "matter": {
+    "url": "ws://127.0.0.1:5580/ws",
+    "node_path": "/opt/node-v24.19.0-linux-arm64/bin/node",
+    "timeout_seconds": 15
+  },
+  "rooms": [{"id": "pilot-room"}],
+  "sensors": [{
+    "id": "matter-sensor-1",
+    "name": "Matter sensor example",
+    "room": "pilot-room",
+    "zone": "Test",
+    "provider": "matter",
+    "node_id": 1,
+    "endpoints": {"temperature": 1, "co2": 1}
+  }]
+}

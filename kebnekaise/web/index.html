@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Kebnekaise · Inomhusklimat</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Kebnekaise startsida"><svg viewBox="0 0 36 28" aria-hidden="true"><path d="M2 24 13 5l7 12 5-8 9 15M8 14l5 2 4-3"/></svg><span>kebnekaise<small>ETT FÖNSTER MOT INOMHUSKLIMATET</small></span></a>
+    <div class="side-label">ARBETSYTA</div>
+    <a class="nav-item active" href="#overview"><span>◫</span> Översikt <span class="nav-arrow">↗</span></a>
+    <a class="nav-item" href="#history"><span>⌁</span> Historik</a>
+    <a class="nav-item" href="#locations"><span>⊞</span> Mätpunkter</a>
+    <a class="nav-item" href="#events"><span>◷</span> Händelser</a>
+    <div class="side-label area-label" id="site-name">MÄTMILJÖ</div>
+    <div id="zone-summary"></div>
+    <div class="side-bottom"><span class="local-light"></span> Lokal lagring<small>Historiken lagras lokalt.<br>Mätdata laddas inte upp.</small><div class="version">Version <span id="version">0.1</span></div></div>
+  </aside>
+  <main id="overview">
+    <header class="page-header"><div><div class="eyebrow" id="page-eyebrow">INOMHUSKLIMAT</div><h1>Från känsla till förståelse.</h1><p>Temperatur och CO₂, över tid och mellan rum.</p></div><button class="button primary" id="open-event">+ Notera en upplevelse</button></header>
+    <div class="mode-banner" id="mode-banner"><span class="mode-icon">◈</span><div><strong id="mode-title">Laddar mätmiljö…</strong><span id="mode-description"></span></div><span class="mode-tag" id="mode-tag">M1</span></div>
+    <div id="error" class="error hidden" role="alert"></div>
+    <section class="toolbar" aria-label="Filter för analys">
+      <div class="period-buttons" aria-label="Tidsperiod"><button data-days="1">24 timmar</button><button data-days="7">7 dagar</button><button data-days="28" class="selected">28 dagar</button><button id="custom-toggle">Egen period</button></div>
+      <label class="work-filter"><input type="checkbox" id="work" checked> Bara arbetstid <span id="work-label">08–17</span></label>
+      <label class="source-filter"><span>Källa</span><select id="source"><option value="all">Alla källor</option><option value="matter">Verkliga · Matter</option><option value="ha">Verkliga · HA</option><option value="simulation">Simulering</option><option value="mock">HA-simulator</option><option value="replay">Importerad replay</option></select></label>
+    </section>
+    <form id="custom-range" class="custom-range hidden"><label>Från <input type="datetime-local" id="from" required></label><label>Till <input type="datetime-local" id="to" required></label><button class="button" type="submit">Visa period</button><span>Tider anges i webbläsarens tidszon.</span></form>
+    <div class="period-caption"><span id="period-caption">Beräknar historik…</span><span id="refresh-state" aria-live="polite">Läser lokal databas</span></div>
+    <section class="kpis" aria-label="Sammanfattning av vald period">
+      <article class="kpi"><div class="kpi-label">Mätpunkter med data <span>↗</span></div><div class="kpi-value" id="kpi-sensors">—</div><div class="kpi-detail" id="kpi-sensors-note">Över vald period</div></article>
+      <article class="kpi"><div class="kpi-label">Högsta P95 · CO₂ <span>◌</span></div><div class="kpi-value" id="kpi-co2">—</div><div class="kpi-detail" id="kpi-co2-note">Mätpunktens tidsviktade 95:e percentil</div></article>
+      <article class="kpi"><div class="kpi-label">Temperatur · min–max <span>↕</span></div><div class="kpi-value" id="kpi-temp">—</div><div class="kpi-detail">Alla synliga mätpunkter under perioden</div></article>
+      <article class="kpi"><div class="kpi-label">Täckning · lägsta punkt <span>◷</span></div><div class="kpi-value" id="kpi-coverage">—</div><div class="kpi-detail" id="kpi-coverage-note">Saknad tid räknas inte som bra klimat</div></article>
+    </section>
+    <section class="panel history-panel" id="history">
+      <div class="panel-header"><div><div class="eyebrow">HISTORIK</div><h2>Se hur dagen känns.</h2></div><div class="chart-controls"><div class="metric-buttons"><button id="metric-co2" class="selected">CO₂</button><button id="metric-temperature">Temperatur</button></div><select id="sensor" aria-label="Mätpunkt"><option value="all">Alla mätpunkter</option></select></div></div>
+      <div class="chart-meta"><span id="chart-unit">CO₂ · ppm</span><span id="reference-label">Referens 1 000 ppm</span></div>
+      <div class="chart-wrap" id="chart-wrap"><svg id="chart" viewBox="0 0 1100 280" role="img" aria-label="Historik över vald period"></svg><div id="tooltip" class="tooltip hidden"></div><div id="chart-empty" class="chart-empty hidden">Inga värden för dessa filter.<small>Välj en annan period eller datakälla.</small></div></div>
+      <div id="legend" class="legend"></div>
+      <div class="chart-footer"><span id="aggregation-note">Linjer visar tidsviktade medel. Luckor är saknade data.</span><span>Europe/Stockholm</span></div>
+    </section>
+    <div class="lower-grid">
+      <section class="panel map-panel" id="locations"><div class="panel-header"><div><div class="eyebrow">MÄTPLATSER</div><h2>Senaste avläsningarna.</h2></div><span class="subtle-tag">Nuläge</span></div><p class="panel-intro">Klicka på en punkt för att följa rummet i grafen.</p><div id="zone-map"></div><p class="map-footnote" id="map-footnote">Schematisk gruppering, inte en planritning. Värdena här visar nuläget oberoende av historikfiltret.</p></section>
+      <section class="panel insight-panel"><div class="eyebrow">LÄS MÄTNINGARNA</div><h2>Rätt fråga, bättre underlag.</h2><p id="insight">Vi samlar underlag för att förstå variationen mellan rum och tidpunkter.</p><div class="insight-rule"></div><div class="insight-item"><span>01</span><div><strong>Jämför när lokalerna används</strong><p>Arbetstidsfiltret visar vardagar. Helgdagar och faktisk närvaro ingår inte i filtret.</p></div></div><div class="insight-item"><span>02</span><div><strong>En referens är början på en fråga</strong><p>CO₂ över 1 000 ppm kan motivera att ventilationen undersöks. Temperaturgränserna är valda analysreferenser.</p></div></div><div class="insight-item"><span>03</span><div><strong>En upplevelse är också information</strong><p>Drag, kalla ytor och sol påverkar komforten. Lufttemperatur ensam ger inte hela svaret.</p></div></div><div class="reference-note" id="reference-note"></div></section>
+    </div>
+    <section class="panel table-panel"><div class="panel-header"><div><div class="eyebrow">JÄMFÖR MÄTPUNKTER</div><h2>Vad återkommer över tid?</h2></div><span class="subtle-tag" id="table-metric">CO₂</span></div><div class="table-scroll"><table><thead><tr><th>Mätpunkt</th><th>Källa</th><th>Medel</th><th>P95</th><th>Min–max</th><th>Över referens</th><th>Under referens</th><th>Täckning</th></tr></thead><tbody id="comparison"></tbody></table></div><p class="table-note">Tid över/under referens avser observerad tid. Saknade värden räknas inte som noll. Källor sammanförs aldrig i en statistikrads medel eller P95.</p></section>
+    <section class="panel events-panel" id="events"><div class="panel-header"><div><div class="eyebrow">HÄNDELSER & UPPLEVELSER</div><h2>Sätt siffrorna i sitt sammanhang.</h2></div><button class="button" id="open-event-bottom">+ Lägg till händelse</button></div><div id="event-list" class="event-list"></div><p class="table-note">Händelser för vald period och källa. Högst 500 visas. Undvik namn och andra personuppgifter.</p></section>
+    <footer class="page-footer"><span>kebnekaise <span class="footer-separator">/</span> Lokal klimathistorik</span><span>SQLite · UTC i databasen · Svensk tid i vyn</span></footer>
+  </main>
+  <dialog id="event-dialog"><form id="event-form"><div class="eyebrow">NY HÄNDELSE</div><h2>Vad upplevde du?</h2><p>Tid och plats hjälper oss att förstå mätningarna. Skriv utan personuppgifter.</p><label>Plats<select id="event-sensor"><option value="all">Alla mätplatser</option></select></label><label>Händelse<select id="event-kind"><option value="warm">För varmt</option><option value="cold">För kallt</option><option value="stuffy">Instängd luft</option><option value="window">Fönster öppnat/stängt</option><option value="presentation">Presentation / samling</option><option value="note">Annan observation</option></select></label><label>Tid <input type="datetime-local" id="event-time" required></label><small>Tiden anges i webbläsarens tidszon.</small><label>Kort notering <input id="event-note" maxlength="200" placeholder="Till exempel: varmt vid fönstret efter lunch"></label><p id="event-error" class="form-error" role="alert"></p><div class="dialog-actions"><button class="button" type="button" id="event-cancel">Avbryt</button><button class="button primary" type="submit">Spara lokalt</button></div></form></dialog>
+</body>
+</html>

@@ -1,0 +1,15 @@
+[Unit]
+Description=Kebnekaise consistent daily SQLite snapshot
+
+[Service]
+Type=oneshot
+User=kebnekaise
+Group=kebnekaise
+WorkingDirectory=/opt/kebnekaise
+ExecStart=/usr/bin/python3 scripts/daily_backup.py /var/lib/kebnekaise/office.sqlite3 /var/lib/kebnekaise/backups
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/kebnekaise

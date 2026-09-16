@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "mode": "pilot",
+  "timezone": "Europe/Stockholm",
+  "interval_seconds": 60,
+  "max_hold_seconds": 180,
+  "work_hours": [
+    8,
+    17
+  ],
+  "thresholds": {
+    "co2": 1000,
+    "temperature_low": 20,
+    "temperature_high": 24
+  },
+  "seed": 20260914,
+  "rooms": [
+    {
+      "id": "ne-1",
+      "aspect": "NE",
+      "volume_m3": 120,
+      "people": 8,
+      "ach": 2.5,
+      "setpoint_c": 19.0,
+      "solar_c": 1.0
+    },
+    {
+      "id": "ne-2",
+      "aspect": "NE",
+      "volume_m3": 120,
+      "people": 8,
+      "ach": 2.5,
+      "setpoint_c": 21.0,
+      "solar_c": 1.0
+    },
+    {
+      "id": "ne-3",
+      "aspect": "NE",
+      "volume_m3": 100,
+      "people": 8,
+      "ach": 2.5,
+      "setpoint_c": 21.0,
+      "solar_c": 1.0
+    },
+    {
+      "id": "ne-4",
+      "aspect": "NE",
+      "volume_m3": 120,
+      "people": 8,
+      "ach": 2.5,
+      "setpoint_c": 21.0,
+      "solar_c": 1.0
+    },
+    {
+      "id": "ne-5",
+      "aspect": "NE",
+      "volume_m3": 120,
+      "people": 8,
+      "ach": 2.5,
+      "setpoint_c": 21.0,
+      "solar_c": 1.0
+    },
+    {
+      "id": "sw-1",
+      "aspect": "SW",
+      "volume_m3": 135,
+      "people": 8,
+      "ach": 2.1,
+      "setpoint_c": 22.0,
+      "solar_c": 2.0
+    },
+    {
+      "id": "sw-2",
+      "aspect": "SW",
+      "volume_m3": 135,
+      "people": 8,
+      "ach": 2.1,
+      "setpoint_c": 22.0,
+      "solar_c": 2.0
+    },
+    {
+      "id": "sw-3",
+      "aspect": "SW",
+      "volume_m3": 300,
+      "people": 22,
+      "ach": 2.1,
+      "setpoint_c": 22.0,
+      "solar_c": 3.0
+    },
+    {
+      "id": "lunch",
+      "aspect": "SW",
+      "volume_m3": 420,
+      "people": 65,
+      "ach": 2.3,
+      "setpoint_c": 21.0,
+      "solar_c": 1.1
+    }
+  ],
+  "sensors": [
+    {
+      "id": "ne-1",
+      "name": "Nordost 1",
+      "room": "ne-1",
+      "zone": "Nordost",
+      "provider": "replay",
+      "device_id": ""
+    },
+    {
+      "id": "ne-2",
+      "name": "Nordost 2",
+      "room": "ne-2",
+      "zone": "Nordost",
+      "provider": "replay",
+      "device_id": ""
+    },
+    {
+      "id": "ne-3",
+      "name": "Nordost 3",
+      "room": "ne-3",
+      "zone": "Nordost",
+      "provider": "replay",
+      "device_id": ""
+    },
+    {
+      "id": "ne-4",
+      "name": "Nordost 4",
+      "room": "ne-4",
+      "zone": "Nordost",
+      "provider": "replay",
+      "device_id": ""
+    },
+    {
+      "id": "ne-5",
+      "name": "Nordost 5",
+      "room": "ne-5",
+      "zone": "Nordost",
+      "provider": "replay",
+      "device_id": ""
+    },
+    {
+      "id": "sw-1",
+      "name": "Sydväst 1",
+      "room": "sw-1",
+      "zone": "Sydväst",
+      "provider": "replay",
+      "device_id": ""
+    },
+    {
+      "id": "sw-2",
+      "name": "Sydväst 2",
+      "room": "sw-2",
+      "zone": "Sydväst",
+      "provider": "replay",
+      "device_id": ""
+    },
+    {
+      "id": "sw-3a",
+      "name": "Sydväst 3 · fönster",
+      "room": "sw-3",
+      "zone": "Sydväst",
+      "provider": "replay",
+      "temperature_offset": 1.1,
+      "device_id": ""
+    },
+    {
+      "id": "sw-3b",
+      "name": "Sydväst 3 · inre del",
+      "room": "sw-3",
+      "zone": "Sydväst",
+      "provider": "replay",
+      "temperature_offset": -0.3,
+      "device_id": ""
+    },
+    {
+      "id": "lunch",
+      "name": "Luncharean",
+      "room": "lunch",
+      "zone": "Gemensamt",
+      "provider": "replay",
+      "device_id": ""
+    }
+  ]
+}

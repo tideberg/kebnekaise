@@ -1,0 +1,40 @@
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+
+# Local runtime state, exports, backups and databases.
+data/
+exports/
+artifacts/
+backups/
+*.sqlite*
+*.db
+*.db-*
+*.bak
+*.backup
+
+# Local configuration and credentials. Keep only committed example files.
+config/local*.json
+config/*secret*.json
+*.secret
+.env
+.env.*
+!.env.example
+credentials*.json
+**/credentials.env
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Screenshots and other local media.
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.heic
+
+deploy/ha-app/build/
