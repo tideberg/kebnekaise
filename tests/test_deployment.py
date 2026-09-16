@@ -23,6 +23,7 @@ class DeploymentPolicyTests(unittest.TestCase):
         unit = self.read("deploy/systemd/kebnekaise-dashboard.service")
         self.assertNotIn("[Install]", unit)
         self.assertIn("RuntimeMaxSec=2h", unit)
+        self.assertIn("ReadWritePaths=/var/lib/kebnekaise", unit)
         self.assertIn("IPAddressDeny=any", unit)
         self.assertIn("IPAddressAllow=localhost", unit)
         self.assertIn(" serve", unit)
