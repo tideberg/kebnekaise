@@ -35,7 +35,7 @@ def read_nodes(config, sensors):
     try:
         result = subprocess.run([settings["node_path"], str(HELPER)], input=json.dumps(request),
                                 text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                timeout=timeout + 5, check=True)
+                                timeout=timeout + 5, check=True, env={})
         if len(result.stdout) > 1_000_000:
             raise ValueError("Matter-svaret är för stort")
         nodes = json.loads(result.stdout)

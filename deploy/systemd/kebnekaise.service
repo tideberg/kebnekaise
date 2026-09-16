@@ -1,5 +1,5 @@
 [Unit]
-Description=Kebnekaise local climate collector and loopback dashboard
+Description=Kebnekaise local climate collector
 After=network-online.target time-sync.target
 Wants=network-online.target
 
@@ -8,7 +8,7 @@ Type=simple
 User=kebnekaise
 Group=kebnekaise
 WorkingDirectory=/opt/kebnekaise
-ExecStart=/usr/bin/python3 -m kebnekaise --config /etc/kebnekaise/office.json --db /var/lib/kebnekaise/office.sqlite3 run
+ExecStart=/usr/bin/python3 -m kebnekaise --config /etc/kebnekaise/office.json --db /var/lib/kebnekaise/office.sqlite3 collect
 EnvironmentFile=-/etc/kebnekaise/credentials.env
 Environment=PYTHONDONTWRITEBYTECODE=1
 Restart=on-failure
@@ -24,10 +24,15 @@ ProtectHome=true
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectHostname=true
 RestrictSUIDSGID=true
 RestrictRealtime=true
+RestrictNamespaces=true
 LockPersonality=true
 CapabilityBoundingSet=
+SystemCallArchitectures=native
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 
 [Install]
