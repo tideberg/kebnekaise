@@ -24,6 +24,58 @@ class MatterTests(unittest.TestCase):
     def decode(self, result=None):
         return matter.decode_sensor(self.sensor, self.result if result is None else result, T0, T0+15)
 
+    def test_humidity_hundredths_range_and_storage(self):
+        self.sensor["endpoints"]["humidity"] = 1
+        config.validate(self.config)
+        attrs = self.result["attributes"]
+        for raw, expected in ((0, 0), (4823, 48.23), (10000, 100)):
+            attrs["1/1029/0"] = raw
+            rows, errors = self.decode()
+            self.assertEqual(errors, [])
+            self.assertEqual(rows[-1][1:5], ("humidity", "matter", T0, expected))
+        for raw in (None, True, -1, 10001, 4823.5, float("nan")):
+            attrs["1/1029/0"] = raw
+            rows, errors = self.decode()
+            self.assertNotIn("humidity", [r[1] for r in rows])
+            self.assertTrue(errors)
+        attrs["1/1029/0"] = 4823
+        with tempfile.TemporaryDirectory() as d:
+            con = storage.connect(Path(d) / "data.sqlite3")
+            storage.insert(con, self.config, self.decode()[0], now=T0)
+            result = analytics.summarize(con, self.config, T0, T0+60, metric="humidity")
+            row = next(r for r in result["summary"] if r["metric"] == "humidity")
+            self.assertAlmostEqual(row["mean"], 48.23)
+            self.assertEqual(row["above_seconds"], 0)
+            self.assertEqual(len(result["series"]), 1)
+            con.close()
+
+    def test_pm25_optional_units_and_invalid_values(self):
+        self.sensor["endpoints"]["pm25"] = 1
+        config.validate(self.config)
+        attrs = self.result["attributes"]
+        attrs.update({"1/1066/0": 0, "1/1066/8": 4})
+        rows, errors = self.decode()
+        self.assertEqual(errors, [])
+        self.assertEqual(rows[-1][1:5], ("pm25", "matter", T0, 0))
+        for raw in (None, True, -1, float("nan")):
+            attrs["1/1066/0"] = raw
+            rows, errors = self.decode()
+            self.assertEqual([r[1] for r in rows], ["temperature", "co2"])
+            self.assertTrue(errors)
+        attrs["1/1066/0"] = 33.5
+        for unit in (None, 0, 3, True):
+            attrs["1/1066/8"] = unit
+            self.assertNotIn("pm25", [r[1] for r in self.decode()[0]])
+        attrs["1/1066/8"] = 4
+        with tempfile.TemporaryDirectory() as d:
+            con = storage.connect(Path(d) / "data.sqlite3")
+            storage.insert(con, self.config, self.decode()[0], now=T0)
+            result = analytics.summarize(con, self.config, T0, T0+60, metric="pm25")
+            row = next(r for r in result["summary"] if r["metric"] == "pm25")
+            self.assertEqual(row["mean"], 33.5)
+            self.assertEqual(row["above_seconds"], 0)
+            con.close()
+
     def test_units_paths_and_receipt_time(self):
         rows, errors = self.decode()
         self.assertEqual(errors, [])

@@ -64,7 +64,10 @@ just test                      # statistik, lagring, HTTP-säkerhet och adaptert
 just check                     # databasens integritet och antal värden per källa
 just seed 7                    # lägg till sju dagars syntetisk historik
 just run                       # insamling + lokal dashboard, utan seed
-just view                      # enbart dashboard
+just view                      # lokal dashboard, demo som standard
+just view-rpi                  # riktiga data från RPi via SSH, lokal port 8840
+just view-mini01               # riktiga data från mini01 via SSH, lokal port 8841
+just view-live                 # samma som view-rpi (bakåtkompatibelt)
 just report                    # exports/rapport.md, vald periods statistik
 just export                    # exports/readings.csv, samtliga råvärden
 just backup                    # exports/backup.sqlite3, konsistent backup
@@ -72,6 +75,48 @@ just note warm sw-3a 'Varmt efter lunch'
 just hil-demo                  # NE-1 via mock-HA, övriga nio via simulator
 just pi-check                  # lokal, skrivskyddad inventering inför Pi-installation
 ```
+
+`just view` använder port 8840 om den är ledig, annars tilldelas en ledig port
+automatiskt. Dashboarden öppnas i standardwebbläsaren och adressen skrivs även ut
+i terminalen. Välj en bestämd port med
+`just view config/demo.json data/demo.sqlite3 8842`.
+
+`just view-rpi` och `just view-mini01` startar vald värds dashboard vid behov
+och öppnar den via en lokal SSH-tunnel. Kör dem i varsin terminal för att visa
+båda samtidigt. Ange SSH-mål direkt, till exempel
+`just view-mini01 användare@värd`, eller konfigurera `config/local-view.json`
+(Git-ignorerad):
+
+```json
+{
+  "rpi": {"host": "användare@pi.local"},
+  "mini01": {"host": "användare@mini.local"}
+}
+```
+
+Det äldre formatet `{"host": "användare@pi.local"}` fungerar fortfarande för RPi.
+Miljövariablerna `KEBNEKAISE_PI_HOST` och `KEBNEKAISE_MINI01_HOST` går före
+filen; ett SSH-mål på kommandoraden går före miljövariablerna.
+Båda värdarna använder `kebnekaise-dashboard.service` på fjärrport 8840.
+På mini01 startas användartjänsten med `systemctl --user`; på RPi startas
+systemtjänsten med `sudo -n systemctl`. Nyckelinloggning och en redan betrodd
+SSH-värd krävs, samt lösenordsfri sudo för dashboardtjänsten på RPi.
+SSH-alias från `~/.ssh/config` kan användas som värdnamn.
+Om mDNS inte fungerar kan profilen också ha `"hostname": "192.0.2.10"`
+med värdens aktuella IP-adress. SSH ansluter då till adressen men kontrollerar
+värdnyckeln mot namnet i `host`. Adressen används bara när profilens `host`
+är valt; håll den uppdaterad om datorn byter nätverk eller får en ny IP.
+
+När lokal port och fjärrport skiljer sig används en lokal loopback-proxy som
+översätter Host/Origin efter kontroll av webbläsarens ursprung. Dashboardens
+Host-, Origin- och skrivtokenskydd behålls.
+
+En upptagen lokal port ger ett fel, så att en annan värds data inte öppnas av
+misstag. Välj en annan port med `just view-mini01 "" 8843` eller
+`just view-rpi användare@pi.local 8844`. Kommandot kontrollerar att dashboarden
+har pilot- eller produktionsläge och enbart riktiga datakällor innan den öppnas.
+Tunneln hålls öppen tills du trycker Ctrl-C. Insamlingen på värden fortsätter
+och dashboardtjänsten har sin vanliga tvåtimmarsgräns.
 
 Export, rapport och manuell backup vägrar skriva över en existerande målfil.
 Ange ett nytt filnamn, till exempel `just report exports/rapport-2026-09-15.md`.

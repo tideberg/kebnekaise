@@ -8,6 +8,8 @@ Type=simple
 User=kebnekaise-matter
 Group=kebnekaise-matter
 WorkingDirectory=/opt/kebnekaise-matter
+Environment=ENABLE_TIME_SYNC=true
+Environment=TZ=Europe/Stockholm
 ExecStart=/opt/node-v24.21.0-linux-arm64/bin/node node_modules/matter-server/dist/esm/MatterServer.js --storage-path /var/lib/kebnekaise-matter --listen-address 127.0.0.1 --port 5580 --primary-interface eth0 --default-fabric-label Kebnekaise --disable-ota --disable-thread-diagnostics --log-level warning
 Restart=on-failure
 RestartSec=15

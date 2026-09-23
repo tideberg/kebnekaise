@@ -14,7 +14,7 @@ class FakeSocket extends EventTarget {
 }
 
 const request = () => ({url: "ws://127.0.0.1:5580/ws", timeout_ms: 100,
-  reads: [{node_id: 1, attributes: ["1/1026/0", "1/1037/0", "1/1037/8"]}]});
+  reads: [{node_id: 1, attributes: ["1/1026/0", "1/1037/0", "1/1037/8", "1/1066/0", "1/1066/8", "1/1029/0"]}]});
 function useFake(t, onSend) {
   const native = globalThis.WebSocket;
   globalThis.WebSocket = FakeSocket;
@@ -29,11 +29,11 @@ test("only an explicit read response becomes a timestamped sample", async t => {
     socket.message({event: "attribute_updated", data: [1, "1/1037/0", 9999]});
     socket.message({result: [{node_id: 1, attributes: {"1/1037/0": 9999}}]});
     queueMicrotask(() => socket.message({message_id: command.message_id,
-      result: {"1/1026/0": 2392, "1/1037/0": 391, "1/1037/8": 0, "private/unrequested": "discard"}}));
+      result: {"1/1026/0": 2392, "1/1037/0": 391, "1/1037/8": 0, "1/1029/0": 4823, "private/unrequested": "discard"}}));
   });
   const before = Math.floor(Date.now()/1000);
   const result = await readAttributes(request());
-  assert.deepEqual(result[1].attributes, {"1/1026/0": 2392, "1/1037/0": 391, "1/1037/8": 0});
+  assert.deepEqual(result[1].attributes, {"1/1026/0": 2392, "1/1037/0": 391, "1/1037/8": 0, "1/1029/0": 4823});
   assert.ok(result[1].received_at >= before && result[1].received_at <= Math.floor(Date.now()/1000));
 });
 

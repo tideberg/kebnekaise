@@ -64,7 +64,8 @@ def summarize(con, config, start, end, work_only=False, source="all", metric="co
                                       "observed_seconds": 0, "weighted_sum": 0.,
                                       "above_seconds": 0, "below_seconds": 0,
                                       "min": None, "max": None, "distribution": defaultdict(int)})
-        limit_hi = config["thresholds"]["co2" if measure == "co2" else "temperature_high"]
+        limit_hi = (math.inf if measure in {"pm25", "humidity"} else
+                    config["thresholds"]["co2" if measure == "co2" else "temperature_high"])
         limit_lo = config["thresholds"]["temperature_low"] if measure == "temperature" else -math.inf
         for a, b in intersections(max(start, ts), min(next_ts, ts + hold, end), spans, ends):
             seconds = b-a
@@ -74,7 +75,7 @@ def summarize(con, config, start, end, work_only=False, source="all", metric="co
             item["below_seconds"] += seconds if value < limit_lo else 0
             item["min"] = value if item["min"] is None else min(item["min"], value)
             item["max"] = value if item["max"] is None else max(item["max"], value)
-            item["distribution"][round(value, 2 if measure == "temperature" else 0)] += seconds
+            item["distribution"][round(value, 0 if measure == "co2" else 2)] += seconds
             if measure != metric:
                 continue
             while a < b:

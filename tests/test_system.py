@@ -1,5 +1,6 @@
 import copy
 import csv
+import errno
 import io
 import json
 import os
@@ -303,6 +304,30 @@ class ExportTests(DatabaseCase):
             import hashlib
             self.assertEqual(manifest["files"]["readings.csv"]["sha256"], hashlib.sha256(z.read("readings.csv")).hexdigest())
             self.assertEqual(manifest["rows"], 0)
+
+
+class PortSelectionTests(unittest.TestCase):
+    def test_auto_port_prefers_8840_and_falls_back_when_busy(self):
+        args = cli.parser().parse_args(["serve", "--port", "auto"])
+        self.assertIsNone(args.port)
+        with patch.object(server, "LocalServer") as factory:
+            server.make_server("unused", {}, args.port)
+            self.assertEqual(factory.call_args.args[0], ("127.0.0.1", 8840))
+        with patch.object(server, "LocalServer", side_effect=[
+            OSError(errno.EADDRINUSE, "busy"), object()
+        ]) as factory:
+            server.make_server("unused", {}, args.port)
+            self.assertEqual([call.args[0] for call in factory.call_args_list],
+                             [("127.0.0.1", 8840), ("127.0.0.1", 0)])
+
+    def test_explicit_port_and_other_errors_never_fall_back(self):
+        self.assertEqual(cli.parser().parse_args(["serve"]).port, 8840)
+        for port, error in ((8842, errno.EADDRINUSE), (None, errno.EACCES)):
+            with self.subTest(port=port, error=error):
+                with patch.object(server, "LocalServer", side_effect=OSError(error, "failed")) as factory:
+                    with self.assertRaises(OSError):
+                        server.make_server("unused", {}, port)
+                    factory.assert_called_once()
 
 
 class NetworkTests(DatabaseCase):

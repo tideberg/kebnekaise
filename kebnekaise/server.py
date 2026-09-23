@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import hmac
 import json
 import secrets
@@ -203,4 +204,10 @@ def make_server(path, config, port=8840):
                 if con:
                     con.close()
 
-    return LocalServer(("127.0.0.1", port), Handler)
+    try:
+        return LocalServer(("127.0.0.1", 8840 if port is None else port), Handler)
+    except OSError as exc:
+        if port is not None or exc.errno != errno.EADDRINUSE:
+            raise
+        # Let the OS reserve a free port atomically when the preferred port is busy.
+        return LocalServer(("127.0.0.1", 0), Handler)
