@@ -91,3 +91,11 @@ delvisa fel, avbrott och återhämtning, CSV/backup och databasens migration med
 återrullning vid fel. Praktiska driftprov och kvarstående hårdvaruprov redovisas
 i [Pi-status](PI-SETUP.md). Längre drift och verkligt sensor-/Thread-bortfall
 behöver verifieras med hårdvaran.
+
+### PM2,5
+
+PM2,5 aktiveras per Matter-sensor med `"pm25": 1` i `endpoints` (ange sensorns faktiska endpoint). Kluster 1066 läses med mätvärde 0 och enhet 8. Endast µg/m³ (enhetskod 4) accepteras; noll är giltigt, saknade värden blir dataluckor. Befintliga konfigurationer fungerar utan PM2,5. Dashboarden visar historik och nuläge utan förinställd gränsvärdeslinje för PM2,5.
+
+### Relativ luftfuktighet
+
+Aktiveras per sensor med `"humidity": 1` i `endpoints` (faktisk endpoint). Kluster 1029, attribut 0, rapporterar heltal i hundradels procent. Loggern dividerar med 100 och accepterar 0–100 %. Null, fel typ och värden utanför intervallet blir dataluckor. Måttet är valfritt för äldre konfigurationer och visas som Luftfuktighet i dashboarden utan förinställda gränsvärden.

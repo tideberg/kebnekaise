@@ -27,6 +27,32 @@ Behåll nätverkskabeln ansluten vid första installationen. IP-adressen tilldel
 av nätet och kan ändras; använd lokal namnupplösning i första hand. SSH och mDNS
 ska starta automatiskt efter att de verifierats på målmaskinen.
 
+## Byte av dator eller nätverk
+
+Hämta repot och aktuell branch på den nya datorn. Python 3.11+ och SSH räcker
+för fjärrvisningen; `just` är valfritt. Databasen och sensorernas parning finns
+kvar på Pi:n och följer inte med Git. Även `config/local-view.json` är
+Git-ignorerad och behöver skapas lokalt om en sparad anslutningsprofil önskas.
+
+Den nya datorns publika SSH-nyckel måste finnas i Pi-användarens
+`~/.ssh/authorized_keys`. Ordna detta medan en redan behörig dator eller lokal
+konsol finns tillgänglig; lösenordsinloggning är avstängd. Behåll den privata
+nyckeln på den dator där den skapades. Kontrollera Pi:ns värdnyckelfingeravtryck
+mot den redan betrodda anslutningen vid första inloggningen.
+
+Anslut Pi:n med Ethernet och prova `ssh <pi-user>@<pi-host>.local`.
+Om nätet inte stöder mDNS, hitta adressen i DHCP-listan eller fråga IT.
+En sparad `hostname`-adress från det gamla nätet måste uppdateras eller tas
+bort. Klientisolering på nätet kan hindra SSH även med fungerande internet.
+
+Öppna dashboarden från repots rot med ett explicit SSH-mål:
+
+```sh
+python3 scripts/view_live.py --target rpi <pi-user>@<pi-host>.local
+```
+
+Med Just fungerar även `just view-rpi <pi-user>@<pi-host>.local`.
+
 ## Verifiera på Pi:n
 
 - Nyckelinloggning fungerar även efter omstart och SSH tillåter inte lösenord.
@@ -165,3 +191,7 @@ Om Imagers kommandoläge fastnar vid avmontering kan macOS behöva en grafisk
 administratörsbekräftelse. Identifiera alltid kortet på nytt före en eventuell
 omskrivning och håll lokala avbildningar, kontrollsummor och nätverksfiler
 utanför repot.
+
+## Sensorernas klockor
+
+Matter-tjänsten aktiverar inbyggd tidssynk med `ENABLE_TIME_SYNC=true` och `TZ=Europe/Stockholm`. Pi:ns NTP måste fungera (`timedatectl show -p NTPSynchronized`). Kontrollern synkroniserar stödda sensorer var 24:e timme och hanterar tidszon/sommartid. Första synkroniseringen väntar efter start så att noderna hinner ansluta. Kontrollera UTC och lokal tid på sensorerna efter aktivering. Loggerns historik använder fortsatt mottagningstid på Pi:n.

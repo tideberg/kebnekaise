@@ -15,6 +15,7 @@ import sys
 import threading
 import time
 import uuid
+import webbrowser
 import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -167,6 +168,15 @@ def report(con, config, days, work):
     return "\n".join(lines)
 
 
+def open_browser(url):
+    try:
+        if webbrowser.open(url, new=2):
+            return
+    except (OSError, webbrowser.Error):
+        pass
+    print(f"Kunde inte öppna webbläsaren automatiskt. Öppna {url}", file=sys.stderr)
+
+
 def run_service(args, config, with_collector):
     stop, failures = threading.Event(), []
     http = server.make_server(args.db, config, args.port)
@@ -189,8 +199,11 @@ def run_service(args, config, with_collector):
         signal.signal(sig, shutdown)
     if thread:
         thread.start()
-    print(f"Kebnekaise · {config['mode']} · http://127.0.0.1:{http.server_port} · Ctrl-C avslutar", flush=True)
+    url = f"http://127.0.0.1:{http.server_port}"
+    print(f"Kebnekaise · {config['mode']} · {url} · Ctrl-C avslutar", flush=True)
     try:
+        if args.open_browser:
+            threading.Thread(target=open_browser, args=(url,), daemon=True).start()
         http.serve_forever(poll_interval=.2)
     finally:
         stop.set()
@@ -212,7 +225,9 @@ def parser():
     s.add_argument("--end", help="ISO-tid med tidszon; standard är nu")
     for name in ("run", "serve"):
         s = sub.add_parser(name, help="dashboard och insamling" if name == "run" else "bara dashboard")
-        s.add_argument("--port", type=int, default=8840)
+        s.add_argument("--port", type=lambda value: None if value == "auto" else int(value), default=8840,
+                       help="portnummer, eller auto för 8840 med en ledig port som reserv")
+        s.add_argument("--open-browser", action="store_true", help="öppna dashboarden i standardwebbläsaren")
     s = sub.add_parser("collect", help="samla data utan dashboard")
     s.add_argument("--once", action="store_true")
     s = sub.add_parser("mock-ha", help="lokal HA-simulator för adaptertest")

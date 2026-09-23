@@ -19,9 +19,14 @@ HELPER = Path(__file__).with_name("matter_read.mjs")
 
 def attribute_paths(sensor):
     endpoints = sensor["endpoints"]
-    return {"temperature": f"{endpoints['temperature']}/1026/0",
+    paths = {"temperature": f"{endpoints['temperature']}/1026/0",
             "co2": f"{endpoints['co2']}/1037/0",
             "co2_unit": f"{endpoints['co2']}/1037/8"}
+    if "pm25" in endpoints:
+        paths.update(pm25=f"{endpoints['pm25']}/1066/0", pm25_unit=f"{endpoints['pm25']}/1066/8")
+    if "humidity" in endpoints:
+        paths["humidity"] = f"{endpoints['humidity']}/1029/0"
+    return paths
 
 
 def read_nodes(config, sensors):
@@ -58,17 +63,19 @@ def decode_sensor(sensor, result, started_at, received_at):
     paths = attribute_paths(sensor)
     rows, errors = [], []
     for metric, (unit, low, high) in METRICS.items():
+        if metric not in paths:
+            continue
         raw = attrs.get(paths[metric])
         if (isinstance(raw, bool) or not isinstance(raw, (int, float)) or not math.isfinite(raw)
-                or (metric == "temperature" and not isinstance(raw, int))):
+                or (metric in {"temperature", "humidity"} and not isinstance(raw, int))):
             errors.append(f"{metric}: saknat eller ogiltigt värde")
             continue
-        if metric == "co2":
-            measurement_unit = attrs.get(paths["co2_unit"])
-            if type(measurement_unit) is not int or measurement_unit != 0:
-                errors.append("co2: ppm-enhet kunde inte verifieras")
+        if metric in {"co2", "pm25"}:
+            measurement_unit = attrs.get(paths[f"{metric}_unit"])
+            if type(measurement_unit) is not int or measurement_unit != (0 if metric == "co2" else 4):
+                errors.append(f"{metric}: {unit}-enhet kunde inte verifieras")
                 continue
-        value = raw / 100 if metric == "temperature" else raw
+        value = raw / 100 if metric in {"temperature", "humidity"} else raw
         if not low <= value <= high:
             errors.append(f"{metric}: värdet ligger utanför tillåtet intervall")
             continue

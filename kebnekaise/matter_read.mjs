@@ -10,7 +10,7 @@ export function readAttributes({url, timeout_ms, reads}) {
       !Array.isArray(reads) || !reads.length || reads.length > 100 ||
       reads.some(r => !Number.isSafeInteger(r.node_id) || r.node_id < 1 ||
         !Array.isArray(r.attributes) || !r.attributes.length || r.attributes.length > 300 ||
-        r.attributes.some(p => typeof p !== "string" || !/^\d+\/(1026\/0|1037\/(0|8))$/.test(p)))) {
+        r.attributes.some(p => typeof p !== "string" || !/^\d+\/((1026|1029)\/0|(1037|1066)\/(0|8))$/.test(p)))) {
     throw new Error("Invalid local read request");
   }
   return new Promise(resolve => {

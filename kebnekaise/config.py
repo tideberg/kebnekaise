@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-METRICS = {"temperature": ("°C", -40, 85), "co2": ("ppm", 250, 40000)}
+METRICS = {"temperature": ("°C", -40, 85), "co2": ("ppm", 250, 40000), "pm25": ("µg/m³", 0, 100000), "humidity": ("%", 0, 100)}
 SOURCES = {"simulation", "ha", "matter", "mock", "replay"}
 ID = re.compile(r"^[a-z][a-z0-9_-]{0,47}$")
 
@@ -78,6 +78,8 @@ def validate(config):
             raise ValueError("Production tillåter bara verklig HA, Matter eller disabled")
         if provider in {"ha", "mock"}:
             for metric in METRICS:
+                if metric in {"pm25", "humidity"} and metric not in sensor.get("entities", {}):
+                    continue
                 entity = sensor.get("entities", {}).get(metric, "")
                 if not re.fullmatch(r"sensor\.[a-z0-9_]+", entity):
                     raise ValueError(f"{sid}: ange HA-entity för {metric}")
@@ -88,6 +90,8 @@ def validate(config):
             if not isinstance(node_id, int):
                 raise ValueError("Matter node_id måste vara ett heltal")
             for metric in METRICS:
+                if metric in {"pm25", "humidity"} and metric not in sensor.get("endpoints", {}):
+                    continue
                 endpoint = sensor.get("endpoints", {}).get(metric)
                 number(endpoint, 1, 65534, f"{metric} endpoint")
                 if not isinstance(endpoint, int):

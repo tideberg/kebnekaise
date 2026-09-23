@@ -20,9 +20,21 @@ seed days="28":
 run config="config/demo.json" db="data/demo.sqlite3" port="8840":
     {{python}} -m kebnekaise --config {{quote(config)}} --db {{quote(db)}} run --port {{quote(port)}}
 
-# Visa befintlig databas, utan insamlare.
-view config="config/demo.json" db="data/demo.sqlite3" port="8840":
-    {{python}} -m kebnekaise --config {{quote(config)}} --db {{quote(db)}} serve --port {{quote(port)}}
+# Visa lokal databas (demo som standard) i webbläsaren, utan insamlare.
+view config="config/demo.json" db="data/demo.sqlite3" port="auto":
+    {{python}} -m kebnekaise --config {{quote(config)}} --db {{quote(db)}} serve --port {{quote(port)}} --open-browser
+
+# Visa riktiga data från RPi via SSH (bakåtkompatibelt kommando).
+view-live host="" port="8840":
+    {{python}} scripts/view_live.py --target rpi --local-port {{quote(port)}} {{if host == "" { "" } else { quote(host) }}}
+
+# Visa RPi:s data via SSH och öppna webbläsaren.
+view-rpi host="" port="8840":
+    {{python}} scripts/view_live.py --target rpi --local-port {{quote(port)}} {{if host == "" { "" } else { quote(host) }}}
+
+# Visa mini01:s data via SSH; separat port så båda vyerna kan vara öppna.
+view-mini01 host="" port="8841":
+    {{python}} scripts/view_live.py --target mini01 --local-port {{quote(port)}} {{if host == "" { "" } else { quote(host) }}}
 
 # Testa riktiga HA-adaptern mot lokal mock; nio mätpunkter fortsätter simuleras.
 hil-demo:

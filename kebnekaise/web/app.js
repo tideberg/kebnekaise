@@ -56,21 +56,21 @@ function renderKpis() {
   const missing = expected.some(s => !rows.some(r => r.sensor === s.id && r.source === s.provider && r.observed_seconds > 0));
   const coverage = !data.expected_seconds ? null : missing ? 0 : rows.length ? Math.min(...rows.map(r => r.coverage || 0)) : null;
   kpi("kpi-coverage", fmt(coverage == null ? null : coverage * 100), "%");
-  $("kpi-coverage-note").textContent = `Färskt rapporterat värde · ${metric === "co2" ? "CO₂" : "temperatur"}`;
+  $("kpi-coverage-note").textContent = `Färskt rapporterat värde · ${metric === "co2" ? "CO₂" : metric === "humidity" ? "Luftfuktighet" : metric === "pm25" ? "PM2,5" : "temperatur"}`;
   $("insight").textContent = co2.length ? `${name(co2[0].sensor)} har urvalets högsta CO₂-P95: ${fmt(co2[0].p95, 0)} ppm. Jämför tidsmönstret med rummets användning och datatäckning.` : "Här visas återkommande mönster när det finns data för ditt urval.";
 }
 
 function renderChart() {
   const chart = $("chart");
   chart.replaceChildren();
-  const unit = metric === "co2" ? "ppm" : "°C";
-  $("chart-unit").textContent = `${metric === "co2" ? "CO₂" : "Temperatur"} · ${unit}`;
-  const thresholds = metric === "co2" ? [config.thresholds.co2] : [config.thresholds.temperature_low, config.thresholds.temperature_high];
-  $("reference-label").textContent = `Analysreferens ${thresholds.map(x => fmt(x, 0)).join("–")} ${unit}`;
+  const unit = metric === "co2" ? "ppm" : metric === "humidity" ? "%" : metric === "pm25" ? "µg/m³" : "°C";
+  $("chart-unit").textContent = `${metric === "co2" ? "CO₂" : metric === "humidity" ? "Luftfuktighet" : metric === "pm25" ? "PM2,5" : "Temperatur"} · ${unit}`;
+  const thresholds = ["pm25", "humidity"].includes(metric) ? [] : metric === "co2" ? [config.thresholds.co2] : [config.thresholds.temperature_low, config.thresholds.temperature_high];
+  $("reference-label").textContent = ["pm25", "humidity"].includes(metric) ? "Ingen analysreferens vald" : `Analysreferens ${thresholds.map(x => fmt(x, 0)).join("–")} ${unit}`;
   const allPoints = data.series.flatMap(s => s.points.filter(p => p.mean != null));
   $("chart-empty").classList.toggle("hidden", allPoints.length > 0);
-  const min = Math.min(...allPoints.map(p => p.min), ...thresholds, metric === "co2" ? 400 : 18);
-  const max = Math.max(...allPoints.map(p => p.max), ...thresholds, metric === "co2" ? 1100 : 25);
+  const min = Math.min(...allPoints.map(p => p.min), ...thresholds, metric === "co2" ? 400 : metric === "humidity" ? 0 : metric === "pm25" ? 0 : 18);
+  const max = Math.max(...allPoints.map(p => p.max), ...thresholds, metric === "co2" ? 1100 : metric === "humidity" ? 100 : metric === "pm25" ? 10 : 25);
   const padding = Math.max((max - min) * .1, metric === "co2" ? 40 : .5);
   const low = Math.floor((min - padding) / (metric === "co2" ? 100 : 1)) * (metric === "co2" ? 100 : 1);
   const high = Math.ceil((max + padding) / (metric === "co2" ? 100 : 1)) * (metric === "co2" ? 100 : 1);
@@ -132,7 +132,7 @@ function renderChart() {
 function renderTable() {
   const tbody = $("comparison");
   tbody.replaceChildren();
-  $("table-metric").textContent = metric === "co2" ? "CO₂ · ppm" : "Temperatur · °C";
+  $("table-metric").textContent = metric === "co2" ? "CO₂ · ppm" : metric === "humidity" ? "Relativ luftfuktighet · %" : metric === "pm25" ? "PM2,5 · µg/m³" : "Temperatur · °C";
   const rows = data.summary.filter(r => r.metric === metric);
   const ordered = selectedSensors();
   for (const sensor of ordered) {
@@ -147,8 +147,8 @@ function renderTable() {
       const source = node("td"); source.append(node("span", labels[r.source], "source-pill " + r.source)); tr.append(source);
       tr.append(node("td", fmt(r.mean, metric === "co2" ? 0 : 1)), node("td", fmt(r.p95, metric === "co2" ? 0 : 1)));
       tr.append(node("td", r.min == null ? "—" : `${fmt(r.min, metric === "co2" ? 0 : 1)}–${fmt(r.max, metric === "co2" ? 0 : 1)}`));
-      tr.append(node("td", r.mean == null ? "—" : `${fmt(r.above_seconds/3600)} h`));
-      tr.append(node("td", r.mean == null || metric === "co2" ? "—" : `${fmt(r.below_seconds/3600)} h`));
+      tr.append(node("td", r.mean == null || ["pm25", "humidity"].includes(metric) ? "—" : `${fmt(r.above_seconds/3600)} h`));
+      tr.append(node("td", r.mean == null || metric !== "temperature" ? "—" : `${fmt(r.below_seconds/3600)} h`));
       const coverage = node("td");
       if (r.coverage != null) {
         const track = node("span", null, "coverage"), bar = node("i");
@@ -178,7 +178,7 @@ function renderMap() {
   }
   for (const s of config.sensors) {
     const latest = key => status.latest.find(r => r.sensor === s.id && r.source === s.provider && r.metric === key);
-    const temp = latest("temperature"), co2 = latest("co2");
+    const temp = latest("temperature"), co2 = latest("co2"), pm25 = latest("pm25"), humidity = latest("humidity");
     const health = status.health.find(r => r.sensor === s.id);
     const inactive = s.provider === "disabled";
     const tFresh = temp && !temp.stale, cFresh = co2 && !co2.stale;
@@ -189,6 +189,8 @@ function renderMap() {
     card.append(node("small", short), node("strong", tFresh ? `${fmt(temp.value)}°` : "—", stale ? "stale" : ""),
       node("span", cFresh ? `${fmt(co2.value, 0)} ppm` : "Inga färska data", stale ? "stale" : ""),
       node("span", `${labels[s.provider]}${stale && !inactive ? " · insamlingsfel eller gamla värden" : ""}`, "source-mark"));
+    if (s.provider === "matter" || pm25) card.append(node("span", pm25 && !pm25.stale ? `PM2,5: ${fmt(pm25.value, 1)} µg/m³` : "PM2,5: inga färska data"));
+    if (humidity) card.append(node("span", !humidity.stale ? `Luftfuktighet: ${fmt(humidity.value, 1)} %` : "Luftfuktighet: inga färska data"));
     if (temp || co2) card.append(node("span", "Avläst " + date(Math.min(temp?.ts ?? Infinity, co2?.ts ?? Infinity), {hour: "2-digit", minute: "2-digit", second: "2-digit"}), "read-time"));
     card.addEventListener("click", () => selectSensor(s.id));
     grids.get(s.zone).append(card);
@@ -303,9 +305,9 @@ async function init() {
       refresh();
     });
     for (const id of ["work", "source", "sensor"]) $(id).addEventListener("change", refresh);
-    for (const value of ["co2", "temperature"]) $("metric-" + value).addEventListener("click", () => {
+    for (const value of ["co2", "temperature", "pm25", "humidity"]) $("metric-" + value).addEventListener("click", () => {
       metric = value;
-      for (const m of ["co2", "temperature"]) $("metric-" + m).classList.toggle("selected", m === metric);
+      for (const m of ["co2", "temperature", "pm25", "humidity"]) $("metric-" + m).classList.toggle("selected", m === metric);
       refresh();
     });
     $("open-event").addEventListener("click", openEvent); $("open-event-bottom").addEventListener("click", openEvent);
